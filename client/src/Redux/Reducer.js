@@ -14,14 +14,7 @@ import {
 const initialState = {
   users: [],
   tasksList: [],
-  TaskSearch: [],
-  TaskFilter: [],
-  TaskFilterByStatus: [],
-  TaskFilterByPriority: [],
-  TaskFilterByDate: [],
-  TaskFilterByTitle: [],
-  TaskFilterByDescription: [],
-  TaskFilterByUser: [],
+  filteredTasks: [],
 };
 
 const Reducer = (state = initialState, action) => {
@@ -40,51 +33,70 @@ const Reducer = (state = initialState, action) => {
       return {
         ...state,
         tasksList: action.payload,
+        filteredTasks: action.payload,
       };
     case ADD_TASK:
       return {
         ...state,
         tasksList: [...state.tasksList, action.payload],
+        filteredTasks: [...state.tasksList, action.payload],
       };
     case DELETE_TASK:
       return {
         ...state,
         tasksList: state.tasksList.filter((task) => task.id !== action.payload),
+        filteredTasks: state.filteredTasks.filter(
+          (task) => task.id !== action.payload
+        ),
       };
     case UPDATE_TASK:
+      const updatedTasks = state.tasksList.map((task) =>
+        task.id === action.payload.id ? action.payload : task
+      );
       return {
         ...state,
-        tasksList: state.tasksList.map((task) =>
-          task.id === action.payload._id ? action.payload : task
-        ),
-      };
-    case TOGGLE_COMPLETED:
-      return {
-        ...state,
-        tasksList: state.tasksList.map((task) =>
-          task.id === action.payload._id ? action.payload : task
-        ),
+        tasksList: updatedTasks,
+        filteredTasks: updatedTasks,
       };
     case FILTER_TASKS_TITLE:
       return {
         ...state,
-        TaskFilterByTitle: state.tasksList.filter((task) =>
+        filteredTasks: state.tasksList.filter((task) =>
           task.title.toLowerCase().includes(action.payload.toLowerCase())
         ),
       };
     case FILTER_TASKS_STATUS:
       return {
         ...state,
-        TaskFilterByStatus: state.tasksList.filter(
-          (task) => task.completed === action.payload
+        filteredTasks: state.tasksList.filter((task) =>
+          action.payload === ""
+            ? true
+            : task.completed === (action.payload === "true")
         ),
       };
     case FILTER_TASKS_DATE:
+      const sortedByDate = [...state.tasksList].sort((a, b) => {
+        if (action.payload === "asc") {
+          return new Date(a.due) - new Date(b.due);
+        } else {
+          return new Date(b.due) - new Date(a.due);
+        }
+      });
       return {
         ...state,
-        TaskFilterByDate: state.tasksList.filter((task) =>
-          task.due.includes(action.payload)
-        ),
+        filteredTasks: sortedByDate,
+      };
+    case "SORT_TASKS_TITLE":
+      const sortedByTitle = [...state.tasksList].sort((a, b) => {
+        if (action.payload === "asc") {
+          return a.title.localeCompare(b.title);
+        } else {
+          return b.title.localeCompare(a.title);
+        }
+      });
+      return {
+        ...state,
+        filteredTasks: sortedByTitle,
       };
     default:
       return state;
